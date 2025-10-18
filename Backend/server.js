@@ -12,6 +12,7 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
 const io = new Server(httpServer, {
     cors: {
         origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -100,6 +101,8 @@ io.on("connection", (socket) => {
             
             socket.emit("room-users", users);
             
+            io.to(roomId).emit("room-users-updated", users);
+            
             console.log(`User ${userName} (${socket.id}) joined room ${roomId}`);
         } catch (error) {
             console.error("Error joining room:", error);
@@ -132,7 +135,12 @@ io.on("connection", (socket) => {
     socket.on("chat-message", async ({ roomId, message }) => {
         try {
             const user = socketToUser.get(socket.id);
-            if (!user) return;
+            if (!user) {
+                console.error("Chat message from unknown user:", socket.id);
+                return;
+            }
+            
+            console.log(`Chat message from ${user.userName} in room ${roomId}: ${message}`);
             
             const chatMessage = {
                 sender: user.userName,
@@ -154,7 +162,8 @@ io.on("connection", (socket) => {
                 }
             );
             
-            io.to(roomId).emit("chat-message", chatMessage);
+            socket.to(roomId).emit("chat-message", chatMessage);
+            console.log(`Chat message sent to room ${roomId}, recipients:`, Array.from(rooms.get(roomId)?.users || []));
         } catch (error) {
             console.error("Error sending chat message:", error);
         }
@@ -255,6 +264,14 @@ io.on("connection", (socket) => {
                 
                 if (room.users.size === 0) {
                     rooms.delete(roomId);
+                } else {
+                    const updatedUsers = Array.from(room.users).map(id => ({
+                        userId: id,
+                        userName: socketToUser.get(id)?.userName,
+                        isAdmin: id === room.admin,
+                        permissions: room.permissions.get(id)
+                    }));
+                    io.to(roomId).emit("room-users-updated", updatedUsers);
                 }
                 
                 socket.to(roomId).emit("user-left", {
@@ -284,6 +301,14 @@ io.on("connection", (socket) => {
                 
                 if (room.users.size === 0) {
                     rooms.delete(roomId);
+                } else {
+                    const updatedUsers = Array.from(room.users).map(id => ({
+                        userId: id,
+                        userName: socketToUser.get(id)?.userName,
+                        isAdmin: id === room.admin,
+                        permissions: room.permissions.get(id)
+                    }));
+                    io.to(roomId).emit("room-users-updated", updatedUsers);
                 }
                 
                 socket.to(roomId).emit("user-left", {

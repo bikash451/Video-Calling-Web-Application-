@@ -51,10 +51,15 @@ const VideoRoom = () => {
             console.log('Initial users to connect with:', initialUsers);
         };
 
+        const handleRoomUsersUpdated = (users) => {
+            if (!mounted) return;
+            console.log('Room users updated:', users);
+            setRoomUsers(users);
+        };
+
         const handleUserJoined = (userData) => {
             if (!mounted) return;
             console.log('New user joined:', userData);
-            setRoomUsers(prev => [...prev, userData]);
             
             if (localStream && userData.userId !== socketRef.current.id) {
                 console.log('Creating peer for new user:', userData.userId);
@@ -113,13 +118,13 @@ const VideoRoom = () => {
 
         const handleUserLeft = ({ userId, userName: leftUserName }) => {
             if (!mounted) return;
+            console.log('User left:', leftUserName, userId);
             const peerObj = peersRef.current.find(p => p.peerID === userId);
             if (peerObj) {
                 peerObj.peer.destroy();
             }
             peersRef.current = peersRef.current.filter(p => p.peerID !== userId);
             setPeers(peersRef.current);
-            setRoomUsers(prev => prev.filter(u => u.userId !== userId));
         };
 
         const handleChatMessage = (message) => {
@@ -172,6 +177,7 @@ const VideoRoom = () => {
         };
 
         socketRef.current.on('room-users', handleRoomUsers);
+        socketRef.current.on('room-users-updated', handleRoomUsersUpdated);
         socketRef.current.on('user-joined', handleUserJoined);
         socketRef.current.on('offer', handleOffer);
         socketRef.current.on('answer', handleAnswer);
@@ -239,6 +245,7 @@ const VideoRoom = () => {
             
             if (socketRef.current) {
                 socketRef.current.off('room-users', handleRoomUsers);
+                socketRef.current.off('room-users-updated', handleRoomUsersUpdated);
                 socketRef.current.off('user-joined', handleUserJoined);
                 socketRef.current.off('offer', handleOffer);
                 socketRef.current.off('answer', handleAnswer);
