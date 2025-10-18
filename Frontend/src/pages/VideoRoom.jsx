@@ -480,21 +480,25 @@ const VideoRoom = () => {
     };
 
     const sendMessage = (message) => {
-        if (!socketRef.current || !socketRef.current.connected) {
-            console.error('❌ Socket not connected!');
-            alert('Not connected to server. Please refresh the page.');
+        if (!socketRef.current) {
+            console.error('❌ Socket not initialized!');
+            alert('Connection error. Please refresh the page.');
             return;
         }
 
         console.log('📤 Sending chat message:', message);
+        console.log('Socket status:', {
+            exists: !!socketRef.current,
+            connected: socketRef.current.connected,
+            id: socketRef.current.id
+        });
         console.log('Room ID:', roomId);
-        console.log('Socket ID:', socketRef.current.id);
         
         const chatMessage = {
             sender: userName,
             message,
             timestamp: new Date(),
-            senderId: socketRef.current.id
+            senderId: socketRef.current.id || 'unknown'
         };
         
         console.log('💬 Adding message locally:', chatMessage);
