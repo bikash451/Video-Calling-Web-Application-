@@ -47,7 +47,13 @@ io.on("connection", (socket) => {
 
     socket.on("join-room", async ({ roomId, userName, userId, isAdmin }) => {
         try {
+            console.log(`\n📥 JOIN-ROOM REQUEST:`);
+            console.log(`   User: ${userName} (${socket.id})`);
+            console.log(`   Room: ${roomId}`);
+            console.log(`   Is Admin: ${isAdmin}`);
+            
             socket.join(roomId);
+            console.log(`✅ Socket ${socket.id} joined room ${roomId}`);
             
             if (!rooms.has(roomId)) {
                 rooms.set(roomId, {
@@ -55,13 +61,16 @@ io.on("connection", (socket) => {
                     admin: isAdmin ? socket.id : null,
                     permissions: new Map()
                 });
+                console.log(`🆕 Created new room: ${roomId}`);
             }
             
             const room = rooms.get(roomId);
             room.users.add(socket.id);
+            console.log(`👥 Room ${roomId} now has ${room.users.size} users`);
             
             if (room.users.size === 1) {
                 room.admin = socket.id;
+                console.log(`👑 ${userName} is now admin`);
             }
             
             socketToUser.set(socket.id, { userId, userName, roomId });
@@ -99,11 +108,13 @@ io.on("connection", (socket) => {
                 permissions: room.permissions.get(id)
             }));
             
+            console.log(`📋 Sending room-users to ${socket.id}:`, users);
             socket.emit("room-users", users);
             
+            console.log(`📢 Broadcasting room-users-updated to room ${roomId}`);
             io.to(roomId).emit("room-users-updated", users);
             
-            console.log(`User ${userName} (${socket.id}) joined room ${roomId}`);
+            console.log(`✅ User ${userName} (${socket.id}) successfully joined room ${roomId}\n`);
         } catch (error) {
             console.error("Error joining room:", error);
             socket.emit("error", { message: "Failed to join room" });
@@ -136,11 +147,22 @@ io.on("connection", (socket) => {
         try {
             const user = socketToUser.get(socket.id);
             if (!user) {
-                console.error("Chat message from unknown user:", socket.id);
+                console.error("❌ Chat message from unknown user:", socket.id);
                 return;
             }
             
-            console.log(`Chat message from ${user.userName} in room ${roomId}: ${message}`);
+            console.log(`\n💬 CHAT MESSAGE:`);
+            console.log(`   From: ${user.userName} (${socket.id})`);
+            console.log(`   Room: ${roomId}`);
+            console.log(`   Message: "${message}"`);
+            
+            const room = rooms.get(roomId);
+            if (!room) {
+                console.error(`❌ Room ${roomId} not found!`);
+                return;
+            }
+            
+            console.log(`   Room has ${room.users.size} users:`, Array.from(room.users));
             
             const chatMessage = {
                 sender: user.userName,
@@ -162,10 +184,11 @@ io.on("connection", (socket) => {
                 }
             );
             
+            console.log(`📤 Broadcasting message to OTHER users in room ${roomId}`);
             socket.to(roomId).emit("chat-message", chatMessage);
-            console.log(`Chat message sent to room ${roomId}, recipients:`, Array.from(rooms.get(roomId)?.users || []));
+            console.log(`✅ Chat message sent\n`);
         } catch (error) {
-            console.error("Error sending chat message:", error);
+            console.error("❌ Error sending chat message:", error);
         }
     });
 

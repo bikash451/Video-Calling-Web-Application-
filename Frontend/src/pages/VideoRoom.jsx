@@ -35,6 +35,9 @@ const VideoRoom = () => {
         
         socketRef.current = getSocket();
         
+        console.log('🔌 Socket initialized:', socketRef.current.id);
+        console.log('🚪 Joining room:', roomId, 'as', userName);
+        
         socketRef.current.emit('join-room', {
             roomId,
             userName,
@@ -53,7 +56,8 @@ const VideoRoom = () => {
 
         const handleRoomUsersUpdated = (users) => {
             if (!mounted) return;
-            console.log('Room users updated:', users);
+            console.log('👥 Room users updated:', users);
+            console.log('Users count:', users.length);
             setRoomUsers(users);
         };
 
@@ -129,7 +133,13 @@ const VideoRoom = () => {
 
         const handleChatMessage = (message) => {
             if (!mounted) return;
-            setMessages(prev => [...prev, message]);
+            console.log('📨 Chat message received:', message);
+            console.log('Current messages count:', messages.length);
+            setMessages(prev => {
+                const newMessages = [...prev, message];
+                console.log('Updated messages count:', newMessages.length);
+                return newMessages;
+            });
         };
 
         const handleAudioToggle = ({ userId, isEnabled }) => {
@@ -470,6 +480,16 @@ const VideoRoom = () => {
     };
 
     const sendMessage = (message) => {
+        if (!socketRef.current || !socketRef.current.connected) {
+            console.error('❌ Socket not connected!');
+            alert('Not connected to server. Please refresh the page.');
+            return;
+        }
+
+        console.log('📤 Sending chat message:', message);
+        console.log('Room ID:', roomId);
+        console.log('Socket ID:', socketRef.current.id);
+        
         const chatMessage = {
             sender: userName,
             message,
@@ -477,12 +497,19 @@ const VideoRoom = () => {
             senderId: socketRef.current.id
         };
         
-        setMessages(prev => [...prev, chatMessage]);
+        console.log('💬 Adding message locally:', chatMessage);
+        setMessages(prev => {
+            const newMessages = [...prev, chatMessage];
+            console.log('Local messages count after add:', newMessages.length);
+            return newMessages;
+        });
         
+        console.log('🔌 Emitting to server...');
         socketRef.current.emit('chat-message', {
             roomId,
             message
         });
+        console.log('✅ Message emitted to server');
     };
 
     const handleLeaveRoom = () => {
