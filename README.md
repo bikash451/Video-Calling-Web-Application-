@@ -18,16 +18,6 @@ Deployed at: https://meetingcam.netlify.app/
 -  **Responsive Design** - Works on desktop and mobile devices
 
 
-## 🛠️ Tech Stack
-
-### Frontend
-- **React** - UI framework
-- **React Router** - Client-side routing
-- **Socket.IO Client** - Real-time communication
-- **Simple Peer** - WebRTC wrapper for peer connections
-- **Axios** - HTTP client
-- **Vite** - Build tool
-
 
 ## 🔧 Installation & Setup
 
