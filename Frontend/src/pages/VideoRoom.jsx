@@ -30,6 +30,16 @@ const VideoRoom = () => {
     const peersRef = useRef([]);
 
     useEffect(() => {
+        console.log('🔢 ROOMUSERS STATE CHANGED! New count:', roomUsers.length);
+        console.log('🔢 RoomUsers:', roomUsers.map(u => u.userName || u.userId));
+    }, [roomUsers]);
+
+    useEffect(() => {
+        console.log('💭 MESSAGES STATE CHANGED! New count:', messages.length);
+        console.log('💭 Messages:', messages.map(m => `${m.sender}: ${m.message}`));
+    }, [messages]);
+
+    useEffect(() => {
         let mounted = true;
         let initialUsers = []; 
         
@@ -39,9 +49,13 @@ const VideoRoom = () => {
         
         const handleRoomUsers = (users) => {
             if (!mounted) return;
-            console.log('📥 Room users received:', users);
-            console.log('Setting roomUsers state to:', users.length, 'users');
+            console.log('📥 ========== ROOM-USERS EVENT RECEIVED ==========');
+            console.log('📥 Received users:', JSON.stringify(users, null, 2));
+            console.log('📥 Number of users:', users.length);
+            console.log('📥 Current roomUsers state BEFORE update:', roomUsers.length);
             setRoomUsers(users);
+            console.log('📥 setRoomUsers() called with', users.length, 'users');
+            console.log('📥 ================================================\n');
             
             initialUsers = users.filter(user => user.userId !== socketRef.current.id);
             console.log('Initial users to connect with:', initialUsers);
@@ -49,10 +63,13 @@ const VideoRoom = () => {
 
         const handleRoomUsersUpdated = (users) => {
             if (!mounted) return;
-            console.log('👥 Room users updated:', users);
-            console.log('Users count:', users.length);
-            console.log('Setting roomUsers state to:', users.length, 'users');
+            console.log('👥 ========== ROOM-USERS-UPDATED EVENT RECEIVED ==========');
+            console.log('👥 Received users:', JSON.stringify(users, null, 2));
+            console.log('👥 Number of users:', users.length);
+            console.log('👥 Current roomUsers state BEFORE update:', roomUsers.length);
             setRoomUsers(users);
+            console.log('👥 setRoomUsers() called with', users.length, 'users');
+            console.log('👥 =========================================================\n');
         };
 
         const handleUserJoined = (userData) => {
@@ -127,11 +144,16 @@ const VideoRoom = () => {
 
         const handleChatMessage = (message) => {
             if (!mounted) return;
-            console.log('📨 Chat message received:', message);
-            console.log('Current messages count:', messages.length);
+            console.log('� ========== CHAT-MESSAGE EVENT RECEIVED ==========');
+            console.log('💬 Received message:', JSON.stringify(message, null, 2));
+            console.log('💬 From:', message.sender);
+            console.log('💬 Text:', message.message);
+            console.log('💬 Current messages count BEFORE:', messages.length);
             setMessages(prev => {
                 const newMessages = [...prev, message];
-                console.log('Updated messages count:', newMessages.length);
+                console.log('💬 Updated messages count AFTER:', newMessages.length);
+                console.log('💬 All messages:', newMessages.map(m => `${m.sender}: ${m.message}`));
+                console.log('💬 ==================================================\n');
                 return newMessages;
             });
         };
@@ -546,6 +568,9 @@ const VideoRoom = () => {
                     <div className="badge badge-primary badge-lg gap-2">
                         <FiUsers size={18} />
                         {roomUsers.length} {roomUsers.length === 1 ? 'Participant' : 'Participants'}
+                    </div>
+                    <div className="badge badge-accent badge-sm">
+                        DEBUG: State={roomUsers.length} | Peers={peers.length}
                     </div>
                     <button onClick={copyMeetingLink} className="btn btn-sm btn-primary gap-2">
                         <FiCopy size={16} />
