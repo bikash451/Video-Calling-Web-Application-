@@ -569,9 +569,6 @@ const VideoRoom = () => {
                         <FiUsers size={18} />
                         {roomUsers.length} {roomUsers.length === 1 ? 'Participant' : 'Participants'}
                     </div>
-                    <div className="badge badge-accent badge-sm">
-                        DEBUG: State={roomUsers.length} | Peers={peers.length}
-                    </div>
                     <button onClick={copyMeetingLink} className="btn btn-sm btn-primary gap-2">
                         <FiCopy size={16} />
                         Copy Link
