@@ -36,18 +36,11 @@ const VideoRoom = () => {
         socketRef.current = getSocket();
         
         console.log('🔌 Socket initialized:', socketRef.current.id);
-        console.log('🚪 Joining room:', roomId, 'as', userName);
         
-        socketRef.current.emit('join-room', {
-            roomId,
-            userName,
-            userId: null,
-            isAdmin: isAdmin
-        });
-
         const handleRoomUsers = (users) => {
             if (!mounted) return;
-            console.log('Room users received:', users);
+            console.log('📥 Room users received:', users);
+            console.log('Setting roomUsers state to:', users.length, 'users');
             setRoomUsers(users);
             
             initialUsers = users.filter(user => user.userId !== socketRef.current.id);
@@ -58,6 +51,7 @@ const VideoRoom = () => {
             if (!mounted) return;
             console.log('👥 Room users updated:', users);
             console.log('Users count:', users.length);
+            console.log('Setting roomUsers state to:', users.length, 'users');
             setRoomUsers(users);
         };
 
@@ -201,6 +195,16 @@ const VideoRoom = () => {
         socketRef.current.on('promoted-to-admin', handlePromotedToAdmin);
         socketRef.current.on('removed-from-room', handleRemovedFromRoom);
         socketRef.current.on('permissions-updated', handlePermissionsUpdated);
+
+        console.log('✅ All event listeners registered');
+        console.log('🚪 Now joining room:', roomId, 'as', userName);
+        
+        socketRef.current.emit('join-room', {
+            roomId,
+            userName,
+            userId: null,
+            isAdmin: isAdmin
+        });
 
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
